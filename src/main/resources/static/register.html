@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Register | Rahulraddi</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .auth-container { max-width: 400px; margin: 80px auto; padding: 0 20px; }
+        .auth-card { background: var(--panel); padding: 32px; border-radius: var(--card-radius); box-shadow: var(--shadow); }
+        .auth-title { text-align: center; margin-bottom: 24px; font-size: 24px; font-weight: 800; }
+        .full-width { width: 100%; margin-top: 16px; }
+        .text-center { text-align: center; margin-top: 16px; color: var(--muted); font-size: 14px; }
+        .text-center a { color: var(--accent); font-weight: 600; }
+        .error-msg { color: #ef4444; background: #fee2e2; padding: 10px; border-radius: 8px; margin-bottom: 16px; text-align: center; display: none; }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="container wrap">
+            <div class="brand">Rahulraddi</div>
+        </div>
+    </header>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <h1 class="auth-title">Create Account</h1>
+            <div id="errorMsg" class="error-msg"></div>
+            <form id="registerForm">
+                <div class="field">
+                    <label>Username</label>
+                    <input type="text" id="username" required>
+                </div>
+                <div class="field">
+                    <label>Password</label>
+                    <input type="password" id="password" required>
+                </div>
+                <button type="submit" class="btn full-width">Sign Up</button>
+            </form>
+            <div class="text-center">
+                Already have an account? <a href="login.html">Login</a>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const errorDiv = document.getElementById('errorMsg');
+
+            try {
+                const response = await fetch('/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+
+                if (response.ok) {
+                    window.location.href = 'login.html';
+                } else {
+                    errorDiv.textContent = 'Registration failed. Try again.';
+                    errorDiv.style.display = 'block';
+                }
+            } catch (err) {
+                console.error(err);
+                errorDiv.textContent = 'Something went wrong';
+                errorDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

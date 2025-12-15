@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Product Details</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header class="header">
+    <div class="container wrap">
+      <div class="brand">My E-Comm</div>
+      <nav class="nav">
+        <a class="btn ghost" href="index.html">Back</a>
+        <a class="btn ghost" id="editBtn" style="display:none">Edit</a>
+        <a class="btn cart-btn" href="cart.html" id="cartBtn">Cart <span id="cartCount" class="cart-count">0</span></a>
+      </nav>
+    </div>
+  </header>
+
+  <main class="container">
+    <div id="productArea" class="product-wrap"></div>
+  </main>
+
+  <script src="header.js"></script>
+  <script>
+    const API_BASE = '/api';
+    const getParam = (k) => new URLSearchParams(location.search).get(k);
+    const id = getParam('id');
+    const PRODUCT_URL = `${API_BASE}/pro/${id}`;
+    const IMAGE_URL = `${API_BASE}/pro/${id}/image`;
+
+    const area = document.getElementById('productArea');
+    const editBtn = document.getElementById('editBtn');
+
+    async function load(){
+      if(!id){
+        area.innerHTML = '<div style="color:var(--muted)">No product id provided.</div>';
+        console.warn('No id provided in URL');
+        return;
+      }
+
+      try{
+        const res = await fetch(PRODUCT_URL);
+        if(!res.ok){
+          console.error('Failed to fetch product', res.status, await res.text());
+          throw new Error('Product not found');
+        }
+        const p = await res.json();
+        render(p);
+
+        // Show & wire Edit button
+        if(editBtn){
+          editBtn.style.display = 'inline-block';
+          editBtn.href = `update_product.html?id=${id}`;
+          editBtn.onclick = ()=> { location.href = `update_product.html?id=${id}`; };
+        }
+
+      } catch(err){
+        console.error(err);
+        area.innerHTML = '<div style="color:var(--muted)">Unable to load product. Check backend.</div>';
+      }
+    }
+
+    function render(p){
+      area.innerHTML = '';
+
+      const left = document.createElement('div'); left.className='product-left';
+      const img = document.createElement('img'); img.src = IMAGE_URL; img.alt = p.name || '';
+      left.appendChild(img);
+
+      const right = document.createElement('div'); right.className='product-right';
+      const cat = document.createElement('div'); cat.className='category'; cat.textContent = (p.category||'').toUpperCase();
+      const name = document.createElement('h1'); name.className='product-name'; name.textContent = p.name || '';
+      const brand = document.createElement('div'); brand.className='product-brand'; brand.textContent = p.brand || '';
+
+      const desc = document.createElement('div'); desc.className = 'product-desc';
+      desc.textContent = p.description || '';
+      desc.style.whiteSpace = 'pre-wrap';
+
+      const hr = document.createElement('div'); hr.className='hr';
+      const price = document.createElement('div'); price.className='detail-price'; price.textContent = `₹ ${p.price || 0}`;
+
+      const addBtn = document.createElement('button');
+      addBtn.className = 'btn';
+      addBtn.type = 'button';
+      addBtn.textContent = 'Add to cart';
+      addBtn.addEventListener('click', () => {
+        addToCart({
+          id: p.id,
+          name: p.name,
+          brand: p.brand,
+          price: p.price || 0,
+          image: `${API_BASE}/pro/${p.id}/image`,
+          qty: 1
+        });
+        if (window.updateCartCount) window.updateCartCount();
+        // simple feedback
+        addBtn.textContent = 'Added';
+        setTimeout(()=> addBtn.textContent = 'Add to cart', 900);
+      });
+
+      const info = document.createElement('div'); info.className='small-muted';
+      info.innerHTML = `<div>Stock Available : <b>${p.quantity ?? 0}</b></div>
+                        <div style="margin-top:10px">Product listed on: <div style="margin-top:6px">${p.releaseDate ? new Date(p.releaseDate).toLocaleDateString() : '-'}</div></div>`;
+
+      right.appendChild(cat);
+      right.appendChild(name);
+      right.appendChild(brand);
+      right.appendChild(desc);
+      right.appendChild(hr);
+      right.appendChild(price);
+      right.appendChild(addBtn);
+      right.appendChild(info);
+
+      area.appendChild(left);
+      area.appendChild(right);
+    }
+
+    document.addEventListener('DOMContentLoaded', load);
+  </script>
+</body>
+</html>
